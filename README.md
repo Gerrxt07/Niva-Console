@@ -12,7 +12,6 @@
 
 ## 📑 Table of Contents
 - [📑 Table of Contents](#-table-of-contents)
-- [✨ Features](#-features)
 - [💻 Installation](#-installation)
   - [Executable Batch](#executable-batch)
 - [🗺️ Roadmap](#️-roadmap)
@@ -22,12 +21,6 @@
   - [Support](#support)
 - [📄 License](#-license)
 
-## ✨ Features
-- **Feature 1**:
-  - Description 1
-- **Feature 2**:
-  - Description 2
-
 ## 💻 Installation
 
 ### Executable Batch
@@ -35,11 +28,7 @@
 
 ## 🗺️ Roadmap
 
-- [x] Feature 1
-- [ ] Feature 2
-- [ ] Feature 3
-  - [ ] Subfeature 1
-  - [x] Subfeature 2
+- **Our Roadmap**: [Roadmap](https://github.com/Gerrxt07/Niva-Console/blob/main/ROADMAP.md)
 
 ## 🔧 Troubleshooting
 
