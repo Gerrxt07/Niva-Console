@@ -1,1 +1,2 @@
-Scripts/Core/__pycache__/Update.cpython-313.pyc
+Scripts/Core/__pycache__/*.pyc
+Niva-Console.zip
