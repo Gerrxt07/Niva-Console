@@ -49,7 +49,7 @@ class NivaUpdater:
         self.backup_path = os.path.join('backups', f"niva_backup_{timestamp}")
         
         print(Fore.CYAN + f"Creating backup at: {self.backup_path}")
-        await asyncio.to_thread(shutil.copytree, '.', self.backup_path, ignore=shutil.ignore_patterns('backups', self.staging_dir, self.temp_dir, '__pycache__'))
+        await asyncio.to_thread(shutil.copytree, '.', self.backup_path, ignore=shutil.ignore_patterns('backups', self.staging_dir, self.temp_dir, '__pycache__', '.git'))
         print(Fore.GREEN + f"Backup created successfully")
 
     async def rollback(self):
@@ -57,7 +57,7 @@ class NivaUpdater:
             print(Fore.YELLOW + "Initiating rollback...")
             # Clear current directory (except backups and staging)
             for item in os.listdir('.'):
-                if item not in ['backups', self.staging_dir, self.temp_dir]:
+                if item not in ['backups', self.staging_dir, self.temp_dir, '.git']:
                     path = Path(item)
                     if path.is_dir():
                         await asyncio.to_thread(shutil.rmtree, path)
@@ -155,7 +155,7 @@ class NivaUpdater:
             # Download release
             print(Fore.CYAN + f"Downloading version {latest_release['tag_name']}...")
             async with aiohttp.ClientSession(
-                headers={'Accept': 'application/octet-stream'},
+                headers={'Accept': 'application/vnd.github.v3.raw'},
                 timeout=aiohttp.ClientTimeout(total=30)
             ) as session:
                 async with session.get(latest_release['zipball_url']) as response:
