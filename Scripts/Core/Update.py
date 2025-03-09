@@ -222,7 +222,7 @@ class NivaUpdater:
                 return None, "Already up to date"
                 
             # There's an update available
-            return latest_release, f"Update available: {current_version} → {latest_version}"
+            return latest_release, f"Update available: {current_version} -> {latest_version}"
             
         except Exception as e:
             return None, f"Error checking for updates: {str(e)}"
