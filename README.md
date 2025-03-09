@@ -33,7 +33,7 @@
 ## 🔧 Troubleshooting
 
 ### Known Issues
-- **All Issues**: [CVE Markdown](https://github.com/Gerrxt07/Niva-Console/CVE.md)
+- **All Issues**: [CVE Markdown](https://github.com/Gerrxt07/Niva-Console/blob/main/CVE.md)
 
 ### Debugging / Logs
 1. Check log files at `C:\Users\User\AppData\Roaming\Niva\logs`.
