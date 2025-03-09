@@ -14,6 +14,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 import platform
+from Scripts.Core.Logging import log
 
 # Initialize colorama for Windows compatibility
 init(autoreset=True)
@@ -48,13 +49,13 @@ class NivaUpdater:
             
         self.backup_path = os.path.join('backups', f"niva_backup_{timestamp}")
         
-        print(Fore.CYAN + f"Creating backup at: {self.backup_path}")
+        log("INFO", f"Creating backup at: {self.backup_path}")
         await asyncio.to_thread(shutil.copytree, '.', self.backup_path, ignore=shutil.ignore_patterns('backups', self.staging_dir, self.temp_dir, '__pycache__', '.git'))
-        print(Fore.GREEN + f"Backup created successfully")
+        log("INFO", "Backup created successfully")
 
     async def rollback(self):
         if self.backup_path and os.path.exists(self.backup_path):
-            print(Fore.YELLOW + "Initiating rollback...")
+            log("WARNING", "Initiating rollback...")
             # Clear current directory (except backups and staging)
             for item in os.listdir('.'):
                 if item not in ['backups', self.staging_dir, self.temp_dir, '.git']:
@@ -66,9 +67,9 @@ class NivaUpdater:
             
             # Restore from backup
             await asyncio.to_thread(shutil.copytree, self.backup_path, '.', dirs_exist_ok=True)
-            print(Fore.GREEN + "Rollback completed successfully")
+            log("INFO", "Rollback completed successfully")
             return True
-        print(Fore.RED + "Rollback failed: No backup available")
+        log("ERROR", "Rollback failed: No backup available")
         return False
 
     async def validate_structure(self, extracted_dir):
@@ -83,12 +84,12 @@ class NivaUpdater:
                     missing.append(item)
         
         if missing:
-            print(Fore.RED + f"Invalid update package. Missing: {', '.join(missing)}")
+            log("ERROR", f"Invalid update package. Missing: {', '.join(missing)}")
             return False
         return True
 
     async def get_latest_version(self):
-        print(Fore.CYAN + "Checking for latest Niva-Console release")
+        log("INFO", "Checking for latest Niva-Console release")
         ssl_context = ssl.create_default_context(cafile=certifi.where())
         ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2
         
@@ -103,7 +104,7 @@ class NivaUpdater:
                     response.raise_for_status()
                     return await response.json()
         except Exception as e:
-            print(Fore.RED + f"Update check failed: {str(e)}")
+            log("ERROR", f"Update check failed: {str(e)}")
             return None
 
     async def atomic_update(self, extracted_dir):
@@ -136,7 +137,7 @@ class NivaUpdater:
             
             return True
         except Exception as e:
-            print(Fore.RED + f"Atomic update failed: {str(e)}")
+            log("ERROR", f"Atomic update failed: {str(e)}")
             return False
 
     async def perform_update(self, latest_release, auto_confirm=False):
@@ -146,14 +147,14 @@ class NivaUpdater:
                 # Prompt for confirmation
                 response = input(Fore.YELLOW + "Do you want to proceed with the update? (y/n): ").lower()
                 if response != 'y':
-                    print(Fore.YELLOW + "Update canceled by user")
+                    log("INFO", "Update canceled by user")
                     return False
                     
             # Create backup
             await self.create_backup()
             
             # Download release
-            print(Fore.CYAN + f"Downloading version {latest_release['tag_name']}...")
+            log("INFO", f"Downloading version {latest_release['tag_name']}...")
             async with aiohttp.ClientSession(
                 headers={'Accept': 'application/vnd.github.v3.raw'},
                 timeout=aiohttp.ClientTimeout(total=30)
@@ -162,7 +163,7 @@ class NivaUpdater:
                     response.raise_for_status()
                     zip_data = await response.read()
             
-            print(Fore.CYAN + "Extracting update package...")
+            log("INFO", "Extracting update package...")
             # Ensure temp dir doesn't exist
             if os.path.exists(self.temp_dir):
                 await asyncio.to_thread(shutil.rmtree, self.temp_dir)
@@ -176,7 +177,7 @@ class NivaUpdater:
             # The GitHub zipball usually contains a folder with the repository name and commit hash
             extracted_dir = os.path.join(self.temp_dir, os.listdir(self.temp_dir)[0])
             
-            print(Fore.CYAN + "Applying update...")
+            log("INFO", "Applying update...")
             # Perform atomic update
             success = await self.atomic_update(extracted_dir)
             
@@ -187,16 +188,16 @@ class NivaUpdater:
                 async with aiofiles.open(self.config_path, 'w') as f:
                     await f.write(toml.dumps(config))
                 
-                print(Fore.GREEN + "Update completed successfully")
-                print(Fore.YELLOW + 'Please restart the application.')
+                log("INFO", "Update completed successfully")
+                log("WARNING", 'Please restart the application.')
                 return True
             
-            print(Fore.RED + "Update failed, initiating rollback")
+            log("ERROR", "Update failed, initiating rollback")
             await self.rollback()
             return False
 
         except Exception as e:
-            print(Fore.RED + f"Update failed: {str(e)}")
+            log("ERROR", f"Update failed: {str(e)}")
             await self.rollback()
             return False
         finally:
@@ -228,10 +229,10 @@ class NivaUpdater:
 
     async def update(self, auto_confirm=False):
         """Main update method that can be called from other parts of the application"""
-        print(Fore.CYAN + f"Niva-Console Updater started on {self.os_type}")
+        log("INFO", f"Niva-Console Updater started on {self.os_type}")
         try:
             latest_release, message = await self.check_for_updates()
-            print(Fore.CYAN + message)
+            log("INFO", message)
             
             if not latest_release:
                 return False, message
@@ -246,7 +247,7 @@ class NivaUpdater:
 
         except Exception as e:
             error_message = f'Critical Error: {str(e)}'
-            print(Fore.RED + error_message)
+            log("ERROR", error_message)
             await self.rollback()
             return False, error_message
 
@@ -272,7 +273,7 @@ if __name__ == "__main__":
         updater = NivaUpdater()
         asyncio.run(updater.update())
         
-        print(Fore.CYAN + "Press any key to exit...")
+        log("INFO", "Press any key to exit...")
         # Cross-platform wait for input
         if platform.system() == "Windows":
             os.system("pause > nul")
@@ -280,4 +281,4 @@ if __name__ == "__main__":
             input()
             
     except KeyboardInterrupt:
-        print(Fore.YELLOW + "\nUpdate process interrupted by user")
+        log("WARNING", "Update process interrupted by user")
