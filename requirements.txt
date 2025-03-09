@@ -1,1 +1,8 @@
+asyncio
+aiohttp
+aiofiles
 datetime
+colorama
+requests
+toml
+certifi
