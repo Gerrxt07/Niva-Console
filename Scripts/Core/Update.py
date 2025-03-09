@@ -15,6 +15,7 @@ from datetime import datetime
 from pathlib import Path
 import platform
 from Scripts.Core.Logging import log
+import hashlib
 
 # Initialize colorama for Windows compatibility
 init(autoreset=True)
@@ -140,6 +141,31 @@ class NivaUpdater:
             log("ERROR", f"Atomic update failed: {str(e)}")
             return False
 
+    async def calculate_checksum(self, file_path):
+        hash_sha256 = hashlib.sha256()
+        async with aiofiles.open(file_path, 'rb') as f:
+            while True:
+                data = await f.read(4096)
+                if not data:
+                    break
+                hash_sha256.update(data)
+        return hash_sha256.hexdigest()
+
+    async def verify_checksum(self, file_path, expected_checksum):
+        calculated_checksum = await self.calculate_checksum(file_path)
+        return calculated_checksum == expected_checksum
+
+    async def get_checksum_from_release(self, latest_release):
+        assets = latest_release.get('assets', [])
+        for asset in assets:
+            if asset['name'].endswith('.sha256'):
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(asset['browser_download_url']) as response:
+                        response.raise_for_status()
+                        checksum_data = await response.text()
+                        return checksum_data.split()[0]
+        return None
+
     async def perform_update(self, latest_release, auto_confirm=False):
         try:
             # If not auto-confirmed, prompt for confirmation
@@ -176,6 +202,17 @@ class NivaUpdater:
 
             # The GitHub zipball usually contains a folder with the repository name and commit hash
             extracted_dir = os.path.join(self.temp_dir, os.listdir(self.temp_dir)[0])
+
+            # Fetch and verify checksum
+            expected_checksum = await self.get_checksum_from_release(latest_release)
+            if expected_checksum:
+                zip_file_path = os.path.join(self.temp_dir, 'update.zip')
+                async with aiofiles.open(zip_file_path, 'wb') as f:
+                    await f.write(zip_data)
+                if not await self.verify_checksum(zip_file_path, expected_checksum):
+                    log("ERROR", "Checksum verification failed")
+                    await self.rollback()
+                    return False
             
             log("INFO", "Applying update...")
             # Perform atomic update
