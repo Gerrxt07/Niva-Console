@@ -16,7 +16,7 @@ from pathlib import Path
 import platform
 
 # Initialize colorama for Windows compatibility
-init()
+init(autoreset=True)
 
 # --------------- [ Async Update Module for Niva-Console ] --------------- #
 
@@ -30,7 +30,7 @@ class NivaUpdater:
         self.os_type = platform.system()  # 'Windows', 'Linux', or 'Darwin' (macOS)
         
         # Adjust required files based on OS
-        self.required_files = ['main.py', 'config.toml', 'scripts']
+        self.required_files = ['Niva.py', 'config.toml', 'scripts']
         
     async def load_config(self):
         async with aiofiles.open(self.config_path, 'r', encoding='utf-8') as f:
