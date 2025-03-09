@@ -6,3 +6,4 @@ colorama
 requests
 toml
 certifi
+hashlib
