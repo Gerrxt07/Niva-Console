@@ -25,6 +25,11 @@ else
     echo "git found"
 fi
 
+if [ ! -f requirements.txt ]; then
+    echo "requirements.txt not found. Please ensure the file exists in the directory."
+    exit 1
+fi
+
 sleep 3
 clear
 
@@ -34,6 +39,11 @@ pip install -r requirements.txt
 
 sleep 3
 clear
+
+if [ ! -f Niva.py ]; then
+    echo "Niva.py not found. Please ensure the file exists in the directory."
+    exit 1
+fi
 
 python Niva.py
 
