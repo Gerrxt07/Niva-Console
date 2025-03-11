@@ -27,6 +27,11 @@ IF ERRORLEVEL 1 (
     ECHO git found
 )
 
+IF NOT EXIST requirements.txt (
+    ECHO requirements.txt not found. Please ensure the file exists in the directory.
+    EXIT /B 1
+)
+
 TIMEOUT /T 3 /NOBREAK > NUL
 CLS
 
@@ -36,6 +41,11 @@ pip install -r requirements.txt
 
 TIMEOUT /T 3 /NOBREAK > NUL
 CLS
+
+IF NOT EXIST Niva.py (
+    ECHO Niva.py not found. Please ensure the file exists in the directory.
+    EXIT /B 1
+)
 
 python Niva.py
 

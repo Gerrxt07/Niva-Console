@@ -20,6 +20,8 @@
   - [Debugging / Logs](#debugging--logs)
   - [Support](#support)
 - [📄 License](#-license)
+- [🤝 Contributing](#-contributing)
+- [📜 Code of Conduct](#-code-of-conduct)
 
 ## 💻 Installation
 
@@ -60,6 +62,22 @@ Under the conditions that:
 - The full license and copyright notices are retained
 
 For the full license text, see: [GNU GPLv3](https://www.gnu.org/licenses/gpl-3.0.en.html)
+
+## 🤝 Contributing
+
+We welcome contributions from the community! To contribute, please follow these steps:
+
+1. Fork the repository.
+2. Create a new branch for your feature or bugfix.
+3. Make your changes and commit them with clear and concise messages.
+4. Push your changes to your forked repository.
+5. Create a pull request to the main repository.
+
+Please ensure your code adheres to our coding standards and includes appropriate tests.
+
+## 📜 Code of Conduct
+
+We are committed to fostering an open and welcoming environment. Please read our [Code of Conduct](CODE_OF_CONDUCT.md) to understand the expectations for behavior within our community.
 
 <div align="center">
   <p>Developed with ❤️ by Gerrxt07@Phantom Community</p>
