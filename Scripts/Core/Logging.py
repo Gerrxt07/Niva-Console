@@ -2,6 +2,7 @@ import datetime
 import os
 from colorama import Fore, init
 import platform
+from cryptography.fernet import Fernet
 
 # Initialize colorama
 init(autoreset=True)
@@ -23,6 +24,18 @@ os.makedirs(log_dir, exist_ok=True)
 # Define a single log file for the entire script run
 LOG_FILE = os.path.join(log_dir, datetime.datetime.now().strftime("%d-%m-%Y_%H-%M-%S_logfile.log"))
 
+# Generate or load encryption key
+KEY_FILE = os.path.join(log_dir, 'key.key')
+if os.path.exists(KEY_FILE):
+    with open(KEY_FILE, 'rb') as key_file:
+        key = key_file.read()
+else:
+    key = Fernet.generate_key()
+    with open(KEY_FILE, 'wb') as key_file:
+        key_file.write(key)
+
+cipher_suite = Fernet(key)
+
 def log(level, message):
     # Get current time and date
     now = datetime.datetime.now()
@@ -43,5 +56,15 @@ def log(level, message):
     else:
         print(formatted_message)
     
-    with open(LOG_FILE, 'a') as file:
-        file.write(formatted_message + '\n')
+    # Encrypt the log message
+    encrypted_message = cipher_suite.encrypt(formatted_message.encode())
+    
+    with open(LOG_FILE, 'ab') as file:
+        file.write(encrypted_message + b'\n')
+
+def decrypt_log_file(log_file_path):
+    with open(log_file_path, 'rb') as file:
+        encrypted_lines = file.readlines()
+    
+    decrypted_lines = [cipher_suite.decrypt(line.strip()).decode() for line in encrypted_lines]
+    return decrypted_lines
