@@ -16,6 +16,8 @@ from pathlib import Path
 import platform
 from Scripts.Core.Logging import log
 import hashlib
+from tqdm import tqdm
+import aioconsole
 
 # Initialize colorama for Windows compatibility
 init(autoreset=True)
@@ -53,6 +55,13 @@ class NivaUpdater:
         log("INFO", f"Creating backup at: {self.backup_path}")
         await asyncio.to_thread(shutil.copytree, '.', self.backup_path, ignore=shutil.ignore_patterns('backups', self.staging_dir, self.temp_dir, '__pycache__', '.git'))
         log("INFO", "Backup created successfully")
+
+    async def cleanup_old_backups(self, max_backups=5):
+        backups = sorted(Path('backups').iterdir(), key=os.path.getmtime)
+        while len(backups) > max_backups:
+            old_backup = backups.pop(0)
+            await asyncio.to_thread(shutil.rmtree, old_backup)
+            log("INFO", f"Deleted old backup: {old_backup}")
 
     async def rollback(self):
         if self.backup_path and os.path.exists(self.backup_path):
@@ -94,19 +103,24 @@ class NivaUpdater:
         ssl_context = ssl.create_default_context(cafile=certifi.where())
         ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2
         
-        try:
-            async with aiohttp.ClientSession(
-                headers={'User-Agent': 'Niva-Console-Updater'},
-                timeout=aiohttp.ClientTimeout(total=10)
-            ) as session:
-                url = 'https://api.github.com/repos/Gerrxt07/Niva-Console/releases/latest'
-                
-                async with session.get(url, ssl=ssl_context) as response:
-                    response.raise_for_status()
-                    return await response.json()
-        except Exception as e:
-            log("ERROR", f"Update check failed: {str(e)}")
-            return None
+        retry_attempts = 3
+        for attempt in range(retry_attempts):
+            try:
+                async with aiohttp.ClientSession(
+                    headers={'User-Agent': 'Niva-Console-Updater'},
+                    timeout=aiohttp.ClientTimeout(total=10)
+                ) as session:
+                    url = 'https://api.github.com/repos/Gerrxt07/Niva-Console/releases/latest'
+                    
+                    async with session.get(url, ssl=ssl_context) as response:
+                        response.raise_for_status()
+                        return await response.json()
+            except Exception as e:
+                log("ERROR", f"Update check failed (Attempt {attempt + 1}/{retry_attempts}): {str(e)}")
+                if attempt < retry_attempts - 1:
+                    await asyncio.sleep(2)
+                else:
+                    return None
 
     async def atomic_update(self, extracted_dir):
         try:
@@ -171,7 +185,7 @@ class NivaUpdater:
             # If not auto-confirmed, prompt for confirmation
             if not auto_confirm:
                 # Prompt for confirmation
-                response = input(Fore.YELLOW + "Do you want to proceed with the update? (y/n): ").lower()
+                response = await aioconsole.ainput(Fore.YELLOW + "Do you want to proceed with the update? (y/n): ").lower()
                 if response != 'y':
                     log("INFO", "Update canceled by user")
                     return False
@@ -278,6 +292,7 @@ class NivaUpdater:
             result = await self.perform_update(latest_release, auto_confirm)
             
             if result:
+                await self.cleanup_old_backups()
                 return True, "Update completed successfully"
             else:
                 return False, "Update failed. System rolled back."
