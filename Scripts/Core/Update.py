@@ -180,6 +180,38 @@ class NivaUpdater:
                         return checksum_data.split()[0]
         return None
 
+    async def download_with_progress(self, url, session):
+        """Download a file with a progress bar"""
+        async with session.get(url) as response:
+            response.raise_for_status()
+            
+            # Get content length for progress bar
+            total_size = int(response.headers.get('content-length', 0))
+            
+            # Create a buffer to store the downloaded data
+            buffer = bytearray()
+            
+            # Create and configure progress bar
+            progress_bar = tqdm(
+                total=total_size,
+                unit='B',
+                unit_scale=True,
+                desc=f"Downloading update",
+                ascii=True,  # Use ASCII characters for better cross-platform compatibility
+                ncols=80     # Set width of progress bar
+            )
+            
+            # Download the file in chunks
+            chunk_size = 4096
+            async for chunk in response.content.iter_chunked(chunk_size):
+                buffer.extend(chunk)
+                progress_bar.update(len(chunk))
+            
+            # Close the progress bar
+            progress_bar.close()
+            
+            return bytes(buffer)
+
     async def perform_update(self, latest_release, auto_confirm=False):
         try:
             # If not auto-confirmed, prompt for confirmation
@@ -193,15 +225,14 @@ class NivaUpdater:
             # Create backup
             await self.create_backup()
             
-            # Download release
+            # Download release with progress bar
             log("INFO", f"Downloading version {latest_release['tag_name']}...")
             async with aiohttp.ClientSession(
                 headers={'Accept': 'application/vnd.github.v3.raw'},
-                timeout=aiohttp.ClientTimeout(total=30)
+                timeout=aiohttp.ClientTimeout(total=60)  # Extended timeout for large downloads
             ) as session:
-                async with session.get(latest_release['zipball_url']) as response:
-                    response.raise_for_status()
-                    zip_data = await response.read()
+                # Use the download_with_progress method
+                zip_data = await self.download_with_progress(latest_release['zipball_url'], session)
             
             log("INFO", "Extracting update package...")
             # Ensure temp dir doesn't exist
@@ -210,9 +241,18 @@ class NivaUpdater:
             
             os.makedirs(self.temp_dir, exist_ok=True)
             
-            # Process update
+            # Process extraction with progress
+            log("INFO", "Extracting files...")
             with zipfile.ZipFile(io.BytesIO(zip_data)) as zip_ref:
-                zip_ref.extractall(self.temp_dir)
+                total_files = len(zip_ref.namelist())
+                extract_progress = tqdm(total=total_files, desc="Extracting files", unit="files", ascii=True, ncols=80)
+                
+                # Extract files one by one to show progress
+                for file in zip_ref.namelist():
+                    zip_ref.extract(file, self.temp_dir)
+                    extract_progress.update(1)
+                
+                extract_progress.close()
 
             # The GitHub zipball usually contains a folder with the repository name and commit hash
             extracted_dir = os.path.join(self.temp_dir, os.listdir(self.temp_dir)[0])
@@ -220,6 +260,7 @@ class NivaUpdater:
             # Fetch and verify checksum
             expected_checksum = await self.get_checksum_from_release(latest_release)
             if expected_checksum:
+                log("INFO", "Verifying download integrity...")
                 zip_file_path = os.path.join(self.temp_dir, 'update.zip')
                 async with aiofiles.open(zip_file_path, 'wb') as f:
                     await f.write(zip_data)
@@ -227,10 +268,18 @@ class NivaUpdater:
                     log("ERROR", "Checksum verification failed")
                     await self.rollback()
                     return False
+                log("INFO", "Checksum verification successful")
             
             log("INFO", "Applying update...")
+            # Show progress for the update application
+            update_progress = tqdm(total=100, desc="Applying update", unit="%", ascii=True, ncols=80)
+            
+            # Simulate progress for the update process
+            update_progress.update(25)  # Start at 25%
             # Perform atomic update
             success = await self.atomic_update(extracted_dir)
+            update_progress.update(75)  # Complete to 100%
+            update_progress.close()
             
             if success:
                 # Update config version
@@ -305,14 +354,14 @@ class NivaUpdater:
 
 
 # Convenience function to run the updater with proper setup for all platforms
-def run_updater(auto_confirm=False):
+async def run_updater(auto_confirm=False):
     """Run the updater with proper platform-specific setup"""
     # Check for asyncio policy to handle Windows differences
     if platform.system() == "Windows":
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     
     updater = NivaUpdater()
-    return asyncio.run(updater.update(auto_confirm))
+    return await updater.update(auto_confirm)
 
 
 # Direct execution handler
@@ -324,7 +373,6 @@ if __name__ == "__main__":
         
         updater = NivaUpdater()
         asyncio.run(updater.update())
-        
         log("INFO", "Press any key to exit...")
         # Cross-platform wait for input
         if platform.system() == "Windows":
