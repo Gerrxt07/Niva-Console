@@ -1,6 +1,13 @@
 import Scripts.Core.Update as Update
 from Scripts.Core.Logging import log
+import aioconsole
+import asyncio
 
-def main():
+async def main():
     log("INFO", "Starting the application")
-    Update.run_updater()
+    await Update.run_updater()
+    log("INFO", "Press any key to exit...")
+    await aioconsole.ainput()
+
+if __name__ == "__main__":
+    asyncio.run(main())

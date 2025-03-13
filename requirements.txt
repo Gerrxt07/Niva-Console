@@ -6,4 +6,6 @@ colorama
 requests
 toml
 certifi
-hashlib
+tqdm
+aioconsole
+cryptography
