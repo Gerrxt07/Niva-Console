@@ -217,7 +217,7 @@ class NivaUpdater:
             # If not auto-confirmed, prompt for confirmation
             if not auto_confirm:
                 # Prompt for confirmation
-                response = await aioconsole.ainput(Fore.YELLOW + "Do you want to proceed with the update? (y/n): ").lower()
+                response = (await aioconsole.ainput(Fore.YELLOW + "Do you want to proceed with the update? (y/n): ")).lower()
                 if response != 'y':
                     log("INFO", "Update canceled by user")
                     return False
