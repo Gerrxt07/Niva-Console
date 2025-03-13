@@ -3,11 +3,9 @@ from Scripts.Core.Logging import log
 import aioconsole
 import asyncio
 
-async def main():
+def main():
     log("INFO", "Starting the application")
-    await Update.run_updater()
-    log("INFO", "Press any key to exit...")
-    await aioconsole.ainput()
+    Update.run_updater()
 
-if __name__ == "__main__":
-    asyncio.run(main())
+def run():
+    main()
