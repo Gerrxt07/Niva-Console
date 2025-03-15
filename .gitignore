@@ -1,2 +1,4 @@
 Scripts/Core/__pycache__/*.pyc
+Scripts/CLI/__pycache__/*.pyc
+Scripts/CLI/Commands/__pycache__/*.pyc
 Niva-Console.zip
