@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://cdn.discordapp.com/attachments/1350899519860117554/1350899545881710712/Strave.png?ex=67d86abe&is=67d7193e&hm=6614f47ce6e7e5c7412aae401f992ade2e4365e1867982869480e1e22a6355ec&" alt="Niva Logo" width="400" height="200">
+  <img src="https://cdn.discordapp.com/attachments/1350899519860117554/1350899545881710712/Strave.png?ex=67d86abe&is=67d7193e&hm=6614f47ce6e7e5c7412aae401f992ade2e4365e1867982869480e1e22a6355ec&" alt="Niva Logo" width="200" height="100">
   <h1>🖥️ Niva</h1>
   <p>Niva is a new, Interstellar Console/CLI System written in Python.</p>
 
