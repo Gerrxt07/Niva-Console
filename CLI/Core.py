@@ -56,14 +56,14 @@ class NivaConsole:
 
     async def get_prompt(self):
         """Generate the command prompt with styling"""
-        user_color = Fore.GREEN
+        user_color = Fore.YELLOW
         device_color = Fore.CYAN
         path_color = Fore.BLUE
         symbol_color = Fore.WHITE
         
         prompt = f"{user_color}{self.user}{Style.RESET_ALL}@" \
                 f"{device_color}{self.device} " \
-                f"{path_color}{self.path}{symbol_color}$ {Style.RESET_ALL}"
+                f"{path_color}{self.path}{symbol_color}$: {Style.RESET_ALL}"
         return prompt
     
     async def get_input(self, prompt):
@@ -98,8 +98,8 @@ class NivaConsole:
     async def show_help(self):
         """Show help information for loaded commands"""
         help_text = [
-            f"\n{Fore.CYAN}┌─ Niva Console Help ───────────────────────┐{Style.RESET_ALL}",
-            f"{Fore.CYAN}│{Style.RESET_ALL} Available Commands:                       {Style.RESET_ALL}"
+            f"\n{Fore.YELLOW}┌─ Niva Console Help ───────────────────────┐{Style.RESET_ALL}",
+            f"{Fore.YELLOW}│{Style.RESET_ALL} Available Commands:                       {Style.RESET_ALL}"
         ]
         
         # Add command help (excluding hidden commands)
@@ -109,7 +109,7 @@ class NivaConsole:
             help_line = f" • {Fore.GREEN}{cmd.name.ljust(10)}{Style.RESET_ALL} {cmd.description}"
             help_text.append(f"{Fore.CYAN}│{Style.RESET_ALL}{help_line.ljust(46)}{Style.RESET_ALL}")
 
-        help_text.append(f"{Fore.CYAN}└───────────────────────────────────────────┘{Style.RESET_ALL}\n")
+        help_text.append(f"{Fore.YELLOW}└───────────────────────────────────────────┘{Style.RESET_ALL}\n")
         print("\n".join(help_text))
 
     def clear_screen(self):
@@ -119,7 +119,7 @@ class NivaConsole:
     async def print_banner(self):
         """Print the console banner"""
         banner = f"""
-{Fore.CYAN}╔═══════════════════════════════════════════════════════════╗
+{Fore.YELLOW}╔═══════════════════════════════════════════════════════════╗
 ║                   N I V A   C O N S O L E                 ║
 ╚═══════════════════════════════════════════════════════════╝{Style.RESET_ALL}
 """
@@ -134,7 +134,7 @@ class NivaConsole:
         await self.print_banner()
         
         print(f"{Fore.YELLOW}Welcome to Niva Console!{Style.RESET_ALL}")
-        print(f"Type {Fore.GREEN}help{Style.RESET_ALL} to see available commands.\n")
+        print(f"Type '{Fore.GREEN}help{Style.RESET_ALL}' to see available commands.\n")
         
         while self.running:
             try:
