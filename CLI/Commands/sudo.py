@@ -7,5 +7,10 @@ class Command:
     hidden = True  # Mark as hidden
 
     async def execute(self, console, args):
-        print(f"{Fore.YELLOW}sudo: Working, but not implemented yet.{Style.RESET_ALL}")
+        password = input(f"{Fore.YELLOW}Enter password: {Style.RESET_ALL}")
+        if password == "test":
+            console.sudo_mode = True
+            print(f"{Fore.GREEN}Entered sudo mode{Style.RESET_ALL}")
+        else:
+            print(f"{Fore.RED}Incorrect password{Style.RESETALL}")
         return True

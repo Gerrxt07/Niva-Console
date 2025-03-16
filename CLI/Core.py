@@ -17,6 +17,7 @@ class NivaConsole:
         self.path = "~"
         self.commands = {}
         self.running = False
+        self.sudo_mode = False  # Pe114
         
     async def initialize(self):
         """Initialize the console with system information and commands"""
@@ -61,9 +62,13 @@ class NivaConsole:
         path_color = Fore.BLUE
         symbol_color = Fore.WHITE
         
-        prompt = f"{user_color}{self.user}{Style.RESET_ALL}@" \
-                f"{device_color}{self.device} " \
-                f"{path_color}{self.path}{symbol_color}$: {Style.RESET_ALL}"
+        if self.sudo_mode:  # Pfdf6
+            prompt = f"{device_color}{self.device}{Style.RESET_ALL}@" \
+                     f"{user_color}os {path_color}{self.path}{symbol_color}#: {Style.RESET_ALL}"
+        else:
+            prompt = f"{user_color}{self.user}{Style.RESET_ALL}@" \
+                     f"{device_color}{self.device} " \
+                     f"{path_color}{self.path}{symbol_color}$: {Style.RESET_ALL}"
         return prompt
     
     async def get_input(self, prompt):
@@ -86,6 +91,10 @@ class NivaConsole:
         
         if cmd in self.commands:
             try:
+                if self.sudo_mode and cmd == "exit_sudo":  # Pc95e
+                    self.sudo_mode = False
+                    print(f"{Fore.GREEN}Exited sudo mode{Style.RESET_ALL}")
+                    return True
                 return await self.commands[cmd].execute(self, args)
             except Exception as e:
                 log("ERROR", f"Command execution error: {e}")
