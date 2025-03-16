@@ -2,3 +2,5 @@ Scripts/Core/__pycache__/*.pyc
 CLI/__pycache__/*.pyc
 CLI/Commands/__pycache__/*.pyc
 Niva-Console.zip
+Database/__pycache__/Database.cpython-313.pyc
+Database/database.db
