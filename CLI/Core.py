@@ -6,6 +6,7 @@ import pathlib
 from colorama import init, Fore, Style
 from Scripts.Core.Logging import log
 import Scripts.Core.Device as Device
+from Database.Database import Database  # P8cbc
 
 # Initialize colorama
 init(autoreset=True)
@@ -17,7 +18,9 @@ class NivaConsole:
         self.path = "~"
         self.commands = {}
         self.running = False
-        self.sudo_mode = False  # Pe114
+        self.sudo_mode = False
+        self.db = Database("Database/database.db")  # P8cbc
+        self.db.initialize()  # P8cbc
         
     async def initialize(self):
         """Initialize the console with system information and commands"""
@@ -144,6 +147,16 @@ class NivaConsole:
         
         print(f"{Fore.YELLOW}Welcome to Niva Console!{Style.RESET_ALL}")
         print(f"Type '{Fore.GREEN}help{Style.RESET_ALL}' to see available commands.\n")
+        
+        # User login prompt
+        while True:
+            username = input(f"{Fore.YELLOW}Enter username: {Style.RESET_ALL}")
+            password = input(f"{Fore.YELLOW}Enter password: {Style.RESET_ALL}")
+            if self.db.validate_user(username, password):
+                print(f"{Fore.GREEN}Login successful!{Style.RESET_ALL}")
+                break
+            else:
+                print(f"{Fore.RED}Invalid username or password. Please try again.{Style.RESET_ALL}")
         
         while self.running:
             try:
