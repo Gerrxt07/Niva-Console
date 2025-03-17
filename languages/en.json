@@ -1,0 +1,9 @@
+{
+    "clear_description": "Clear the screen",
+    "exit_description": "Exit the console",
+    "sudo_description": "Execute commands with elevated privileges",
+    "already_in_sudo_mode": "Already in sudo mode",
+    "enter_password": "Enter password: ",
+    "entered_sudo_mode": "Entered sudo mode",
+    "incorrect_password": "Incorrect password"
+}

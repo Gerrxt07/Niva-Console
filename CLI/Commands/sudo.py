@@ -1,6 +1,7 @@
 import sys
 import platform
 from colorama import init, Fore, Style
+from Scripts.Core.Language import get_message
 init(autoreset=True)
 
 def masked_input(prompt):
@@ -50,18 +51,18 @@ def masked_input(prompt):
 
 class Command:
     name = "sudo"
-    description = "Execute commands with elevated privileges"
+    description = get_message('sudo_description')
     hidden = True  # Mark as hidden
 
     async def execute(self, console, args):
         if console.sudo_mode:
-            print(f"{Fore.RED}Already in sudo mode{Style.RESET_ALL}")
+            print(f"{Fore.RED}{get_message('already_in_sudo_mode')}{Style.RESET_ALL}")
             return True
 
-        password = masked_input(f"{Fore.YELLOW}Enter password: {Style.RESET_ALL}")
+        password = masked_input(f"{Fore.YELLOW}{get_message('enter_password')}{Style.RESET_ALL}")
         if console.db.validate_user(console.user, password):
             console.sudo_mode = True
-            print(f"{Fore.GREEN}Entered sudo mode{Style.RESET_ALL}")
+            print(f"{Fore.GREEN}{get_message('entered_sudo_mode')}{Style.RESET_ALL}")
         else:
-            print(f"{Fore.RED}Incorrect password{Style.RESETALL}")
+            print(f"{Fore.RED}{get_message('incorrect_password')}{Style.RESETALL}")
         return True

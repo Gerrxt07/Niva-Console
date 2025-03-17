@@ -1,0 +1,9 @@
+{
+    "clear_description": "Bildschirm löschen",
+    "exit_description": "Konsole beenden",
+    "sudo_description": "Befehle mit erhöhten Rechten ausführen",
+    "already_in_sudo_mode": "Bereits im Sudo-Modus",
+    "enter_password": "Passwort eingeben: ",
+    "entered_sudo_mode": "Sudo-Modus aktiviert",
+    "incorrect_password": "Falsches Passwort"
+}
