@@ -3,6 +3,7 @@ import asyncio
 import platform
 import importlib
 import pathlib
+import sys
 from colorama import init, Fore, Style
 from Scripts.Core.Logging import log
 import Scripts.Core.Device as Device
@@ -11,10 +12,56 @@ from Database.Database import Database  # P8cbc
 # Initialize colorama
 init(autoreset=True)
 
+def masked_input(prompt):
+    print(prompt, end='', flush=True)
+    if platform.system() == "Windows":
+        import msvcrt
+        pwd = []
+        while True:
+            ch = msvcrt.getch()
+            if ch in [b'\r', b'\n']:
+                print()
+                break
+            elif ch == b'\x03':  # Ctrl+C
+                raise KeyboardInterrupt
+            elif ch == b'\x08':  # Backspace
+                if pwd:
+                    pwd.pop()
+                    print('\b \b', end='', flush=True)
+            else:
+                pwd.append(ch.decode('utf-8', errors='ignore'))
+                print('*', end='', flush=True)
+        return ''.join(pwd)
+    else:
+        import termios, tty
+        fd = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(fd)
+        pwd = ""
+        try:
+            tty.setraw(fd)
+            while True:
+                ch = sys.stdin.read(1)
+                if ch in ['\n', '\r']:
+                    print()
+                    break
+                elif ch == '\x03':
+                    raise KeyboardInterrupt
+                elif ch == '\x7f':
+                    if pwd:
+                        pwd = pwd[:-1]
+                        print('\b \b', end='', flush=True)
+                else:
+                    pwd += ch
+                    print('*', end='', flush=True)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        return pwd
+
 class NivaConsole:
     def __init__(self):
         self.user = None
         self.device = None
+        self.os = None
         self.path = "~"
         self.commands = {}
         self.running = False
@@ -26,6 +73,7 @@ class NivaConsole:
         """Initialize the console with system information and commands"""
         self.device = await Device.get_device_name()
         self.user = await Device.get_user_name()
+        self.os = await Device.get_os_name()
         await self._load_commands()
         log("INFO", f"Console initialized for {self.user}@{self.device}")
 
@@ -66,8 +114,8 @@ class NivaConsole:
         symbol_color = Fore.WHITE
         
         if self.sudo_mode:  # Pfdf6
-            prompt = f"{device_color}{self.device}{Style.RESET_ALL}@" \
-                     f"{user_color}os {path_color}{self.path}{symbol_color}#: {Style.RESET_ALL}"
+            prompt = f"{user_color}{self.device}{Style.RESET_ALL}@" \
+                     f"{device_color}{self.os} {path_color}{self.path}{symbol_color}#: {Style.RESET_ALL}"
         else:
             prompt = f"{user_color}{self.user}{Style.RESET_ALL}@" \
                      f"{device_color}{self.device} " \
@@ -137,28 +185,24 @@ class NivaConsole:
 """
         print(banner)
         
+    def masked_input(self, prompt):
+        return masked_input(prompt)
+
     async def check_initial_users(self):
-        """Check if there are any users in the database"""
         users = self.db.get_all_users()
-        sudo_users = self.db.get_all_sudo_users()
-        
         if not users:
             print(f"{Fore.RED}No users found in the database.{Style.RESET_ALL}")
             while True:
                 username = input(f"{Fore.YELLOW}Create a new user (username): {Style.RESET_ALL}")
-                password = input(f"{Fore.YELLOW}Create a new user (password): {Style.RESET_ALL}")
-                self.db.add_user(username, password, is_sudo=0)
+                password = self.masked_input(f"{Fore.YELLOW}Create a new user (password): {Style.RESET_ALL}")
+                self.db.add_user(username, password)
                 print(f"{Fore.GREEN}User created successfully!{Style.RESET_ALL}")
+                self.user = username
                 break
-        
-        if not sudo_users:
-            print(f"{Fore.RED}No sudo users found in the database.{Style.RESET_ALL}")
-            while True:
-                username = input(f"{Fore.YELLOW}Create a new sudo user (username): {Style.RESET_ALL}")
-                password = input(f"{Fore.YELLOW}Create a new sudo user (password): {Style.RESET_ALL}")
-                self.db.add_user(username, password, is_sudo=1)
-                print(f"{Fore.GREEN}Sudo user created successfully!{Style.RESET_ALL}")
-                break
+        else:
+            first_user = users[0]
+            self.user = first_user[1]
+            print(f"{Fore.GREEN}Auto-logged in as {self.user}.{Style.RESET_ALL}")
 
     async def start(self):
         """Start the console"""
@@ -172,16 +216,6 @@ class NivaConsole:
         print(f"Type '{Fore.GREEN}help{Style.RESET_ALL}' to see available commands.\n")
         
         await self.check_initial_users()
-        
-        # User login prompt
-        while True:
-            username = input(f"{Fore.YELLOW}Enter username: {Style.RESET_ALL}")
-            password = input(f"{Fore.YELLOW}Enter password: {Style.RESET_ALL}")
-            if self.db.validate_user(username, password):
-                print(f"{Fore.GREEN}Login successful!{Style.RESET_ALL}")
-                break
-            else:
-                print(f"{Fore.RED}Invalid username or password. Please try again.{Style.RESET_ALL}")
         
         while self.running:
             try:

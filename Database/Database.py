@@ -1,6 +1,7 @@
 import sqlite3
 from cryptography.fernet import Fernet
 import os
+import platform
 
 class Database:
     def __init__(self, db_path):
@@ -23,14 +24,14 @@ class Database:
         self.cursor.execute('''CREATE TABLE IF NOT EXISTS users (
                                 id INTEGER PRIMARY KEY,
                                 username TEXT NOT NULL,
-                                password TEXT NOT NULL,
-                                is_sudo INTEGER NOT NULL)''')
+                                password TEXT NOT NULL
+                              )''')
         self.conn.commit()
 
-    def add_user(self, username, password, is_sudo):
+    def add_user(self, username, password):
         encrypted_password = self.encrypt_password(password)
-        self.cursor.execute('''INSERT INTO users (username, password, is_sudo)
-                               VALUES (?, ?, ?)''', (username, encrypted_password, is_sudo))
+        self.cursor.execute('''INSERT INTO users (username, password)
+                               VALUES (?, ?)''', (username, encrypted_password))
         self.conn.commit()
 
     def get_user(self, username):
@@ -54,7 +55,13 @@ class Database:
         return self.cipher_suite.decrypt(encrypted_password.encode()).decode()
 
     def generate_key(self):
-        key_file = 'key.key'
+        if platform.system() == "Windows":
+            key_dir = os.path.join(os.getenv('APPDATA'), 'Niva', 'db_keys')
+        else:
+            key_dir = os.path.join(os.path.expanduser('~'), 'Niva', 'db_keys')
+        os.makedirs(key_dir, exist_ok=True)
+        key_file = os.path.join(key_dir, 'db.key')
+
         if os.path.exists(key_file):
             with open(key_file, 'rb') as f:
                 self.key = f.read()
@@ -68,14 +75,6 @@ class Database:
         self.cursor.execute('''SELECT * FROM users''')
         return self.cursor.fetchall()
 
-    def get_all_sudo_users(self):
-        self.cursor.execute('''SELECT * FROM users WHERE is_sudo = 1''')
-        return self.cursor.fetchall()
-
     def user_exists(self, username):
         self.cursor.execute('''SELECT 1 FROM users WHERE username = ?''', (username,))
-        return self.cursor.fetchone() is not None
-
-    def sudo_user_exists(self):
-        self.cursor.execute('''SELECT 1 FROM users WHERE is_sudo = 1''')
         return self.cursor.fetchone() is not None
