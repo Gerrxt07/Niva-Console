@@ -63,3 +63,19 @@ class Database:
             with open(key_file, 'wb') as f:
                 f.write(self.key)
         self.cipher_suite = Fernet(self.key)
+
+    def get_all_users(self):
+        self.cursor.execute('''SELECT * FROM users''')
+        return self.cursor.fetchall()
+
+    def get_all_sudo_users(self):
+        self.cursor.execute('''SELECT * FROM users WHERE is_sudo = 1''')
+        return self.cursor.fetchall()
+
+    def user_exists(self, username):
+        self.cursor.execute('''SELECT 1 FROM users WHERE username = ?''', (username,))
+        return self.cursor.fetchone() is not None
+
+    def sudo_user_exists(self):
+        self.cursor.execute('''SELECT 1 FROM users WHERE is_sudo = 1''')
+        return self.cursor.fetchone() is not None

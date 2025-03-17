@@ -137,6 +137,29 @@ class NivaConsole:
 """
         print(banner)
         
+    async def check_initial_users(self):
+        """Check if there are any users in the database"""
+        users = self.db.get_all_users()
+        sudo_users = self.db.get_all_sudo_users()
+        
+        if not users:
+            print(f"{Fore.RED}No users found in the database.{Style.RESET_ALL}")
+            while True:
+                username = input(f"{Fore.YELLOW}Create a new user (username): {Style.RESET_ALL}")
+                password = input(f"{Fore.YELLOW}Create a new user (password): {Style.RESET_ALL}")
+                self.db.add_user(username, password, is_sudo=0)
+                print(f"{Fore.GREEN}User created successfully!{Style.RESET_ALL}")
+                break
+        
+        if not sudo_users:
+            print(f"{Fore.RED}No sudo users found in the database.{Style.RESET_ALL}")
+            while True:
+                username = input(f"{Fore.YELLOW}Create a new sudo user (username): {Style.RESET_ALL}")
+                password = input(f"{Fore.YELLOW}Create a new sudo user (password): {Style.RESET_ALL}")
+                self.db.add_user(username, password, is_sudo=1)
+                print(f"{Fore.GREEN}Sudo user created successfully!{Style.RESET_ALL}")
+                break
+
     async def start(self):
         """Start the console"""
         await self.initialize()
@@ -147,6 +170,8 @@ class NivaConsole:
         
         print(f"{Fore.YELLOW}Welcome to Niva Console!{Style.RESET_ALL}")
         print(f"Type '{Fore.GREEN}help{Style.RESET_ALL}' to see available commands.\n")
+        
+        await self.check_initial_users()
         
         # User login prompt
         while True:
