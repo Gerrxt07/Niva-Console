@@ -7,8 +7,7 @@ import sys
 from colorama import init, Fore, Style
 from Scripts.Core.Logging import log
 import Scripts.Core.Device as Device
-from Database.Database import Database
-from Scripts.Core.Language import load_language  # Peffc
+from Database.Database import Database  # P8cbc
 
 # Initialize colorama
 init(autoreset=True)
@@ -67,9 +66,8 @@ class NivaConsole:
         self.commands = {}
         self.running = False
         self.sudo_mode = False
-        self.db = Database("Database/database.db")
-        self.db.initialize()
-        self.language = 'EN'  # P78b3
+        self.db = Database("Database/database.db")  # P8cbc
+        self.db.initialize()  # P8cbc
         
     async def initialize(self):
         """Initialize the console with system information and commands"""
@@ -78,7 +76,6 @@ class NivaConsole:
         self.os = await Device.get_os_name()
         await self._load_commands()
         log("INFO", f"Console initialized for {self.user}@{self.device}")
-        load_language(self.language)  # Pc301
 
     async def _load_commands(self):
         """Dynamically load commands from CLI/Commands directory"""

@@ -1,8 +1,6 @@
-from Scripts.Core.Language import get_message
-
 class Command:
     name = "clear"
-    description = get_message('clear_description')
+    description = "Clear the screen"
     
     async def execute(self, console, args):
         console.clear_screen()
